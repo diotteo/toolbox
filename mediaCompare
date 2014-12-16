@@ -1,0 +1,31 @@
+#! /bin/bash
+## Author: Olivier Diotte
+## Created on: 2013/11/12
+## Last updated: 2014/05/02
+## Description: Shows information about media files
+
+args=""
+b_error=0
+if [ $# -eq 0 ]; then
+	echo -e "Usage: $0 {files}" >&2
+else
+  IFS='#'
+  i=0
+	for file in $*; do
+		if [ ! -f "$file" ]; then
+			echo "Error, $file is not a file, skipping" >&2
+			((b_error++))
+			continue
+		fi
+		args[$i]='-i'
+    ((i++))
+    args[$i]="$file"
+    ((i++))
+	done
+fi
+echo "args=${args[*]}"
+
+# Seems like it's true: eval is never the solution
+ffmpeg ${args[*]}
+#eval ffmpeg $args #|& sed -nr '/^Input #0/ { :loop; /^At least one output file must be specified$/ !p; n; b loop }'
+exit $b_error
