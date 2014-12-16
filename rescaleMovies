@@ -52,7 +52,7 @@ for infile in args.input_file:
         m = re.match('^\s+Stream #0:(\d+)(\([a-zA-Z]+\))?: Video:', line)
         if (None != m):
             snum_list.append(m.group(1))
-            m = re.search(' (\d+)x(\d+) ', line)
+            m = re.search(' (\d+)x(\d+),? ', line)
             assert(m != None)
             assert(vsize == None)
             vsize = tuple(map(lambda x: int(x), m.group(1, 2)))
