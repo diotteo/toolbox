@@ -22,8 +22,16 @@ def is_mediafile(s):
         raise argparse.ArgumentTypeError("Not a regular file: '{0}'".format(s))
     return s
 
+
+def is_dir(s):
+    if (not os.path.isdir(s)):
+        raise argparse.ArgumentTypeError("Not a directory '{0}'".format(s))
+    return s
+
+
 parser = argparse.ArgumentParser(description='Rescale movie files')
 parser.add_argument('input_file', type=is_mediafile, nargs='+', help='the media files to rescale')
+parser.add_argument('-d', type=is_dir, nargs='?', default=None, help='directory to put the rescaled files in. Defaults to input file directory')
 args = parser.parse_args()
 
 print(args.input_file)
@@ -34,8 +42,11 @@ for infile in args.input_file:
     print('Processing file "' + infile + '"')
     f.seek(0)
     f.truncate()
-    assert(0 == subprocess.call(['ffprobe', infile], stderr=f))
+    ret = subprocess.call(['ffprobe', infile], stderr=f)
     f.seek(0)
+    if (ret != 0):
+        print('ffprobe error:\n\tinfile="{0}"\n\terr="\n{1}"'.format(infile, f.read().decode()))
+        exit(1)
 
     s = ''
     snum_list = []
@@ -87,6 +98,8 @@ for infile in args.input_file:
 
     #Tests
     #outfile = 'test.' + p[2]
+    if (args.d != None):
+        outfile = args.d + '/' + os.path.basename(outfile)
 
     assert(not os.path.exists(outfile))
 
