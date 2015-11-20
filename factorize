@@ -1,0 +1,15 @@
+#! /usr/bin/env python3
+
+from libs import primes
+import argparse
+
+
+parser = argparse.ArgumentParser(description='factorize integers')
+parser.add_argument('integers', metavar='n', type=int, nargs='+')
+
+args = parser.parse_args()
+
+plist = primes.loadPrimes()
+
+for n in args.integers:
+    print('{} = {}'.format(n, primes.primeFactorize(n, plist)))
