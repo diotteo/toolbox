@@ -1,0 +1,25 @@
+#! /bin/bash
+
+if [[ $# -lt 1 ]]; then
+	cat <<EOF >&2
+Usage: $0 {files to OCR}...
+EOF
+	exit 1
+fi
+
+for i in "$@"; do
+	noext="${i%.*}"
+
+	pre_unp_nam=$(tempfile -s ${noext}.png)
+	post_unp_nam=${pre_unp_nam%.png}_unp.png
+	convert -density 300 -white-threshold 40000 -black-threshold 30000 -alpha deactivate "$i" "${pre_unp_nam}"
+	unpaper -l single "${pre_unp_nam}" "${post_unp_nam}"
+	tesseract "${post_unp_nam}" "${noext}" -l fra
+	rm "${pre_unp_nam}" "${post_unp_nam}"
+
+	unoconv -o "${noext}".txt.pdf "${noext}".txt
+
+	pdftk "$i" background "${noext}.txt.pdf" output "${noext}_withtext.pdf"
+done
+
+pdftk *_withtext.pdf cat output _full_withtext.pdf
