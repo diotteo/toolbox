@@ -1,5 +1,8 @@
 #! /usr/bin/env python3
 
+#Note: use coreutils' factor if you can instead of this. Theirs is much faster and advanced
+#http://git.savannah.gnu.org/cgit/coreutils.git/tree/src/factor.c
+
 from libs import primes
 import argparse
 
