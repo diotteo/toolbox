@@ -72,6 +72,9 @@ for infile in args.input_file:
 			if (None != m):
 				snum_list.append(m.group(1))
 				#print("Other stream = " + line, end='')
+			else:
+				print('Error, no video stream found')
+				exit(1)
 
 	s = s.rstrip('\n')
 
