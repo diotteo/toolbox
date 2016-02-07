@@ -16,17 +16,17 @@ import sys
 WIDTH_MIN = 300
 
 def is_mediafile(s):
-    if (not os.access(s, os.R_OK)):
-        raise argparse.ArgumentTypeError("Can't read file '{0}'".format(s))
-    elif (not os.path.isfile(s)):
-        raise argparse.ArgumentTypeError("Not a regular file: '{0}'".format(s))
-    return s
+	if (not os.access(s, os.R_OK)):
+		raise argparse.ArgumentTypeError("Can't read file '{0}'".format(s))
+	elif (not os.path.isfile(s)):
+		raise argparse.ArgumentTypeError("Not a regular file: '{0}'".format(s))
+	return s
 
 
 def is_dir(s):
-    if (not os.path.isdir(s)):
-        raise argparse.ArgumentTypeError("Not a directory '{0}'".format(s))
-    return s
+	if (not os.path.isdir(s)):
+		raise argparse.ArgumentTypeError("Not a directory '{0}'".format(s))
+	return s
 
 
 parser = argparse.ArgumentParser(description='Rescale movie files')
@@ -39,74 +39,74 @@ print(args.input_file)
 
 f = tempfile.TemporaryFile()
 for infile in args.input_file:
-    print('Processing file "' + infile + '"')
-    f.seek(0)
-    f.truncate()
-    ret = subprocess.call(['ffprobe', infile], stderr=f)
-    f.seek(0)
-    if (ret != 0):
-        print('ffprobe error:\n\tinfile="{0}"\n\terr="\n{1}"'.format(infile, f.read().decode()))
-        exit(1)
+	print('Processing file "' + infile + '"')
+	f.seek(0)
+	f.truncate()
+	ret = subprocess.call(['ffprobe', infile], stderr=f)
+	f.seek(0)
+	if (ret != 0):
+		print('ffprobe error:\n\tinfile="{0}"\n\terr="\n{1}"'.format(infile, f.read().decode()))
+		exit(1)
 
-    s = ''
-    snum_list = []
-    vsize = None
-    b_skip = True
-    for line in f:
-        line = line.decode('utf-8')
-        if (b_skip):
-            b_skip = not line.startswith('Input #0,')
-            if (b_skip):
-                continue
-        s += line
+	s = ''
+	snum_list = []
+	vsize = None
+	b_skip = True
+	for line in f:
+		line = line.decode('utf-8')
+		if (b_skip):
+			b_skip = not line.startswith('Input #0,')
+			if (b_skip):
+				continue
+		s += line
 
-        m = re.match('^\s+Stream #0:(\d+)(\([a-zA-Z]+\))?: Video:', line)
-        if (None != m):
-            snum_list.append(m.group(1))
-            m = re.search(' (\d+)x(\d+),? ', line)
-            assert(m != None)
-            assert(vsize == None)
-            vsize = tuple(map(lambda x: int(x), m.group(1, 2)))
-        else:
-            m = re.match('^\s+Stream #0:(\d+)[()a-zA-Z]*:', line)
-            if (None != m):
-                snum_list.append(m.group(1))
-                #print("Other stream = " + line, end='')
+		m = re.match('^\s+Stream #0:(\d+)(\([a-zA-Z]+\))?: Video:', line)
+		if (None != m):
+			snum_list.append(m.group(1))
+			m = re.search(' (\d+)x(\d+),? ', line)
+			assert(m != None)
+			assert(vsize == None)
+			vsize = tuple(map(lambda x: int(x), m.group(1, 2)))
+		else:
+			m = re.match('^\s+Stream #0:(\d+)[()a-zA-Z]*:', line)
+			if (None != m):
+				snum_list.append(m.group(1))
+				#print("Other stream = " + line, end='')
 
-    s = s.rstrip('\n')
+	s = s.rstrip('\n')
 
-    for i in range(2, 10):
-        new_vsize = tuple(map(lambda x: x / i, vsize))
-        if (vsize[0] % i == 0
-                and vsize[1] % i == 0
-                #Make sure the width isn't too small
-                and new_vsize[0] >= WIDTH_MIN
-                ):
-            break
-    else:
-        sys.exit("Couldn't find suitable size. Original size: {0}".format(vsize))
+	for i in range(2, 10):
+		new_vsize = tuple(map(lambda x: x / i, vsize))
+		if (vsize[0] % i == 0
+				and vsize[1] % i == 0
+				#Make sure the width isn't too small
+				and new_vsize[0] >= WIDTH_MIN
+				):
+			break
+	else:
+		sys.exit("Couldn't find suitable size. Original size: {0}".format(vsize))
 
-    print("i={0}".format(i))
+	print("i={0}".format(i))
 
-    print("new vsize = {0}".format(new_vsize))
-    #print(s)
-    print("snum_list = {0}".format(snum_list))
+	print("new vsize = {0}".format(new_vsize))
+	#print(s)
+	print("snum_list = {0}".format(snum_list))
 
-    p = infile.rpartition('.')
-    assert(len(p[0]) > 0 and len(p[2]) < 4)
-    outfile = p[0] + '_rescaled.' + p[2]
+	p = infile.rpartition('.')
+	assert(len(p[0]) > 0 and len(p[2]) < 4)
+	outfile = p[0] + '_rescaled.' + p[2]
 
-    #Tests
-    #outfile = 'test.' + p[2]
-    if (args.d != None):
-        outfile = args.d + '/' + os.path.basename(outfile)
+	#Tests
+	#outfile = 'test.' + p[2]
+	if (args.d != None):
+		outfile = args.d + '/' + os.path.basename(outfile)
 
-    assert(not os.path.exists(outfile))
+	assert(not os.path.exists(outfile))
 
-    args = ['ffmpeg' , '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1', outfile]
-    #for snum in snum_list:
-    #    args.extend(['-map', )
+	args = ['ffmpeg' , '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1', outfile]
+	#for snum in snum_list:
+	#	args.extend(['-map', )
 
-    print(args)
-    subprocess.call(args)
-    print('\n')
+	print(args)
+	subprocess.call(args)
+	print('\n')
