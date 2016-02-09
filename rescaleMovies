@@ -15,6 +15,25 @@ import sys
 
 WIDTH_MIN = 300
 
+SETTINGS = {
+		'libav': {
+			'probe': 'avprobe',
+			'conv': 'avconv',
+			'videore': '^\s+Stream #0\.(\d+)(\([a-zA-Z]+\))?: Video:',
+			'sizere': ' (\d+)x(\d+),? ',
+			'othrstrmre': '^\s+Stream #0\.(\d+)[()a-zA-Z]*:',
+			},
+		'ffmpeg': {
+			'probe': 'ffprobe',
+			'conv': 'ffmpeg',
+			'videore': '^\s+Stream #0.?(\d+)(\([a-zA-Z]+\))?: Video:',
+			'sizere': '^\s+Stream #0.?:(\d+)[()a-zA-Z]*:',
+			'othrstrmre': '^\s+Stream #0.?:(\d+)[()a-zA-Z]*:',
+			}
+		}
+
+
+
 def is_mediafile(s):
 	if (not os.access(s, os.R_OK)):
 		raise argparse.ArgumentTypeError("Can't read file '{0}'".format(s))
@@ -28,6 +47,20 @@ def is_dir(s):
 		raise argparse.ArgumentTypeError("Not a directory '{0}'".format(s))
 	return s
 
+def get_media_suite():
+	for p in SETTINGS:
+		ret = subprocess.call(['which', SETTINGS[p]['probe']], stdout=tempfile.TemporaryFile(), stderr=subprocess.STDOUT)
+		if (ret == 0):
+			ret = subprocess.call(['which', SETTINGS[p]['conv']], stdout=tempfile.TemporaryFile(), stderr=subprocess.STDOUT)
+			if (ret != 0):
+				raise EnvironmentError('{} installed, but not {}, fix your system'.format(SETTINGS[p]['probe'], SETTINGS[p]['conv']))
+			break
+	else:
+		raise EnvironmentError("no probe program found. Install one of: " + ', '.join(SETTINGS))
+	return SETTINGS[p]
+
+
+SUITE = get_media_suite()
 
 parser = argparse.ArgumentParser(description='Rescale movie files')
 parser.add_argument('input_file', type=is_mediafile, nargs='+', help='the media files to rescale')
@@ -42,10 +75,10 @@ for infile in args.input_file:
 	print('Processing file "' + infile + '"')
 	f.seek(0)
 	f.truncate()
-	ret = subprocess.call(['ffprobe', infile], stderr=f)
+	ret = subprocess.call([SUITE['probe'], infile], stderr=f)
 	f.seek(0)
 	if (ret != 0):
-		print('ffprobe error:\n\tinfile="{0}"\n\terr="\n{1}"'.format(infile, f.read().decode()))
+		print('{} error:\n\tinfile="{0}"\n\terr="\n{1}"'.format(SUITE['probe'], infile, f.read().decode()))
 		exit(1)
 
 	s = ''
@@ -60,22 +93,21 @@ for infile in args.input_file:
 				continue
 		s += line
 
-		m = re.match('^\s+Stream #0:(\d+)(\([a-zA-Z]+\))?: Video:', line)
+		m = re.match(SUITE['videore'], line)
 		if (None != m):
 			snum_list.append(m.group(1))
-			m = re.search(' (\d+)x(\d+),? ', line)
+			m = re.search(SUITE['sizere'], line)
 			assert(m != None)
 			assert(vsize == None)
 			vsize = tuple(map(lambda x: int(x), m.group(1, 2)))
 		else:
-			m = re.match('^\s+Stream #0:(\d+)[()a-zA-Z]*:', line)
+			m = re.match(SUITE['othrstrmre'], line)
 			if (None != m):
 				snum_list.append(m.group(1))
 				#print("Other stream = " + line, end='')
-			else:
-				print('Error, no video stream found')
-				exit(1)
 
+	if (vsize is None):
+		raise Exception('Couldn\'t find video stream size')
 	s = s.rstrip('\n')
 
 	for i in range(2, 10):
@@ -106,7 +138,7 @@ for infile in args.input_file:
 
 	assert(not os.path.exists(outfile))
 
-	args = ['ffmpeg' , '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1', outfile]
+	args = [SUITE['conv'], '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1', outfile]
 	#for snum in snum_list:
 	#	args.extend(['-map', )
 
