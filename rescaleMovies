@@ -138,9 +138,10 @@ for infile in args.input_file:
 
 	assert(not os.path.exists(outfile))
 
-	args = [SUITE['conv'], '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1', outfile]
-	#for snum in snum_list:
-	#	args.extend(['-map', )
+	args = [SUITE['conv'], '-i', infile, '-acodec', 'copy', '-scodec', 'copy', '-vf', 'scale=iw/' + str(i) + ':-1']
+	for s in snum_list:
+		args.extend(['-map', '0:{}'.format(s)])
+	args.append(outfile)
 
 	print(args)
 	subprocess.call(args)
