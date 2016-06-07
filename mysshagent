@@ -2,7 +2,7 @@
 
 MY_DIR=${MY_DIR:-${HOME}/.mysshagent}
 CMD_FILE="${MY_DIR}/sshagent.cmd"
-KEY=${KEY:-${HOME}/.ssh/id_rsa_github}
+KEY=${KEY:-${HOME}/.ssh/id_rsa}
 
 if ! pidof ssh-agent >/dev/null || [ ! -f "${CMD_FILE}" ]; then
 	ssh-agent -s > "${CMD_FILE}"
