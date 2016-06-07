@@ -1,0 +1,8 @@
+#! /bin/bash
+
+#MY_DIR=${MY_DIR:-${HOME}/.mysshagent}
+#CMD_FILE="${MY_DIR}/sshagent.cmd"
+#KEY=${KEY:-${HOME}/.ssh/id_rsa_github}
+KEY=${HOME}/.ssh/id_rsa_github
+
+mysshagent
