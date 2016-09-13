@@ -1,0 +1,37 @@
+#! /usr/bin/env python3
+
+import sys, os, csv, argparse
+
+DELIM=';'
+QUOTE='"'
+
+parser = argparse.ArgumentParser(description='Makes a Reddit (markdownish) table')
+parser.add_argument('-d', default=DELIM, help='CSV delimiter character. Default:{}'.format(DELIM))
+parser.add_argument('-q', default=QUOTE, help='CSV quote character. Default:{}'.format(QUOTE))
+parser.add_argument('file', nargs='+', help='files to translate')
+
+args = parser.parse_args()
+
+for f in args.file:
+	if (not os.path.isfile(f)):
+		continue
+
+	with open(f) as csvf:
+		csvrdr = csv.reader(csvf, delimiter=args.d, quotechar=args.q)
+		rowlist = list(csvrdr)
+
+		nbcols = -1
+		for row in rowlist:
+			if (len(row) > nbcols):
+				nbcols = len(row)
+
+		print('f:{} nbcols: {}'.format(f, nbcols))
+
+		hdrsep = '|:--' + '|--' * (nbcols-2) + '|--:|'
+		isfirst = True
+		for row in rowlist:
+			s = '|' + '|'.join(row) + '|'
+			print(s)
+			if (isfirst):
+				isfirst = False
+				print(hdrsep)
