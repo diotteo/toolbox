@@ -1,0 +1,8 @@
+#! /bin/bash
+
+if ! pidof kdeconnectd >/dev/null; then
+	/usr/lib/kde4/libexec/kdeconnectd
+fi
+
+id=$(kdeconnect-cli -l | head -n 1 | cut -d: -f2 | gawk '{ print $1 }')
+kdeconnect-cli -d "$id" "$@"
