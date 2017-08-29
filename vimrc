@@ -62,6 +62,8 @@ let bogTabPat .= '[^\t]\zs\t\+'
 let bogTabPat .= '' "'/'
 :autocmd BufRead * call matchadd('BogusTabs', bogTabPat, -2)
 
+:autocmd FileType *text* set tw=0
+
 colorscheme desert
 set modeline
 
