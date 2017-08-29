@@ -1,0 +1,32 @@
+#! /bin/bash
+
+if [[ $# -lt 1 ]]; then
+cat >&2 <<<EOF
+Usage: $0 {file}...
+EOF
+fi
+
+for i in "$@"; do
+	if [ ! -e "$i" ]; then
+		echo "$i does not exist, skipping..." >&2
+		continue
+	fi
+
+	base=$(basename "$i")
+	dir=$(dirname "$i")
+	new=$(tr -cd '[:graph:][:blank:]' <<<"$base")
+
+	fnew="${dir}/${new}"
+	sfx=0
+	if [ -e "$fnew" ]; then
+		echo "$fnew exists, trying suffixes..." >&2
+
+		fnew="${dir}/${new}_${sfx}"
+		while [ -e "$fnew" ]; do
+			echo "  suffix ${sfx} exists also..." >&2
+			(( sfx++ ))
+			fnew="${dir}/${new}_${sfx}"
+		done
+	fi
+	mv -vi "$i" "$fnew"
+done
